@@ -2,9 +2,7 @@ package stringabase
 
 import "sync"
 
-// TODO: Ousterhout: This is where a thorough and complete decription of
-// your "class" belongs.
-// Stringbase is a blah blah blah blah
+// Stringabase is just the in-memory key-value store and its attendant accessors.   Hot papa!
 type Stringabase struct {
 	database map[string]string
 	mu       *sync.RWMutex

@@ -1,40 +1,49 @@
 version: "3"
 
-vars:
-  PROJECT: stringabase
-
 tasks:
-  build:
+  default:
+    desc: Full local CI — fmt, vet, lint, vulncheck, race, test, build
     cmds:
       - task: fmt
       - task: vet
       - task: lint
       - task: vulncheck
       - task: race
+      - task: test
       - task: build
+
   fmt:
     desc: gofmt the tree
     cmds:
       - go fmt ./...
+
   vet:
     desc: go vet ./...
     cmds:
       - go vet ./...
+
   lint:
     desc: golangci-lint run
     cmds:
       - golangci-lint run
+
   vulncheck:
     desc: govulncheck over deps
     cmds:
       - go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...
+
+  race:
+    desc: go test -race -shuffle=on ./...
+    cmds:
+      - go test -race -shuffle=on ./...
+
   test:
     desc: go test -shuffle=on ./...
     cmds:
       - go test -shuffle=on ./...
-  race:
-    desc: go test -race ./...
-    cmds:
-      - go test -race ./...
+
   build:
-   - mkdir -p bin
+    desc: Build stringabase to bin/
+    cmds:
+      - mkdir -p bin
+      - go build -o bin/stringabase ./cmd/stringabase
