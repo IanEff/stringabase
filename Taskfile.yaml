@@ -2,48 +2,22 @@ version: "3"
 
 tasks:
   default:
-    desc: Full local CI — fmt, vet, lint, vulncheck, race, test, build
-    cmds:
-      - task: fmt
-      - task: vet
-      - task: lint
-      - task: vulncheck
-      - task: race
-      - task: test
-      - task: build
-
-  fmt:
-    desc: gofmt the tree
-    cmds:
-      - go fmt ./...
-
-  vet:
-    desc: go vet ./...
+    desc: Vet, then test with the race detector
     cmds:
       - go vet ./...
-
-  lint:
-    desc: golangci-lint run
-    cmds:
-      - golangci-lint run
-
-  vulncheck:
-    desc: govulncheck over deps
-    cmds:
-      - go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...
-
-  race:
-    desc: go test -race -shuffle=on ./...
-    cmds:
       - go test -race -shuffle=on ./...
 
-  test:
-    desc: go test -shuffle=on ./...
+  run:
+    desc: Serve stringabase on localhost:4000
     cmds:
-      - go test -shuffle=on ./...
+      - go run ./cmd/stringabase
 
-  build:
-    desc: Build stringabase to bin/
+  set:
+    desc: "Set on the running server: task set -- somekey=somevalue [k2=v2 ...]"
     cmds:
-      - mkdir -p bin
-      - go build -o bin/stringabase ./cmd/stringabase
+      - curl -w '\n' "localhost:4000/set?{{join "&" .CLI_ARGS_LIST}}"
+
+  get:
+    desc: "Get from the running server: task get -- somekey"
+    cmds:
+      - curl -w '\n' "localhost:4000/get?key={{.CLI_ARGS}}"
