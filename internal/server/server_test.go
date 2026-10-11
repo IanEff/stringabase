@@ -70,7 +70,7 @@ func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 	}
 }
 
-func TestListenAndServe_ReturnsWhenContextIsCaneled(t *testing.T) {
+func TestListenAndServe_ReturnsWhenContextIsCanceled(t *testing.T) {
 	t.Parallel()
 	// Hand the HTTP server a canceled context before it starts listening so it returns immediately.
 	ctx, cancel := context.WithCancel(t.Context())

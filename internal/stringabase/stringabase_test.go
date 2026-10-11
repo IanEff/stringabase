@@ -36,7 +36,9 @@ func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 func TestSet_IsRaceFree(t *testing.T) {
 	t.Parallel()
 	db := stringabase.NewStringabase()
+	done := make(chan struct{})
 	go func() {
+		defer close(done)
 		for range 100 {
 			db.Set("a", "1")
 		}
@@ -44,4 +46,5 @@ func TestSet_IsRaceFree(t *testing.T) {
 	for range 100 {
 		db.Get("a")
 	}
+	<-done
 }

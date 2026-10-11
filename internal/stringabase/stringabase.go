@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// Stringabase is a concurrency-safe in-memory Go map[string]string.  It is accessed through Get(), and Set().  Set() will clobber and initialize zero values for keys.  The zero value is not usable: build with NewStringabase()
+// Stringabase is a concurrency-safe in-memory string key-value store.  It is accessed through Get(), and Set().  Set() will clobber existing stored values and allows for empty string values.  The zero value is not usable: build with NewStringabase()
 type Stringabase struct {
 	database map[string]string
 	mu       *sync.RWMutex
@@ -20,14 +20,14 @@ func NewStringabase() *Stringabase {
 }
 
 // Get returns a key's value from the Stringabase.  If the key isn't present, it returns an empty string and false.
-func (s Stringabase) Get(key string) (string, bool) {
+func (s *Stringabase) Get(key string) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	value, ok := s.database[key]
 	return value, ok
 }
 
-// Set sets the key value pair in the database.  If the key is present, it's existing value is clobbered.
+// Set sets the key value pair in the database.  If the key is present, its existing value is clobbered.
 func (s *Stringabase) Set(key, value string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
