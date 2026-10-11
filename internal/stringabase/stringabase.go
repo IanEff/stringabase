@@ -1,7 +1,9 @@
 // Package stringabase implements the basic in-memory key-value store.
 package stringabase
 
-import "sync"
+import (
+	"sync"
+)
 
 // Stringabase is a concurrency-safe in-memory Go map[string]string.  It is accessed through Get(), and Set().  Set() will clobber and initialize zero values for keys.  The zero value is not usable: build with NewStringabase()
 type Stringabase struct {
@@ -25,7 +27,7 @@ func (s Stringabase) Get(key string) (string, bool) {
 	return value, ok
 }
 
-// Set sets the key value pair in the database.  If the value is absent, it is initialized to an empty string.  If the value is present, it's clobbered.
+// Set sets the key value pair in the database.  If the key is present, it's existing value is clobbered.
 func (s *Stringabase) Set(key, value string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

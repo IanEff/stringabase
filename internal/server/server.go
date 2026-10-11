@@ -6,14 +6,21 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ianeff/stringabase/internal/stringabase"
 )
 
-// ListenAndServe serves sb out over HTTP at addr on endpoints described at [NewMuxer], until ctx is canceled. sb is an intialized [stringabase.Stringabase]. addr takes any form net/http accepts ("localhost:3000").
+// ListenAndServe serves sb out over HTTP at addr on endpoints /get and /set, described in [NewMuxer], until ctx is canceled. sb is an intialized [stringabase.Stringabase]. addr takes any form net/http accepts ("localhost:3000").
 // When ctx is canceled, ListenAndServe drops in-flight requests and returns.  If it cannot serve, it immediately returns a non-nil error.
 func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabase) error {
-	srv := &http.Server{Addr: addr, Handler: NewMuxer(sb)}
+	srv := &http.Server{
+		Addr:         addr,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+		Handler:      NewMuxer(sb),
+	}
 	stop := context.AfterFunc(ctx, func() { srv.Close() })
 	defer stop()
 	err := srv.ListenAndServe()
@@ -24,7 +31,7 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabas
 }
 
 // NewMuxer returns a handler for the HTTP API, backed by sb.
-// It collects the following endpoints:
+// It collects and exposes the following endpoints:
 //
 // /get retrieves a value from the Stringabase by key.  Returns an HTTP StatusOK and the value if the key is present, even if that value is an empty string.  Returns a 404 if the key is not found.
 //
