@@ -35,7 +35,7 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabas
 //
 // /get retrieves a value from the Stringabase by key.  Returns an HTTP StatusOK and the value if the key is present, even if that value is an empty string.  Returns a 404 if the key is not found.
 //
-//	/set sets a key-value string pair in the Stringabase.  Will both initialize empty values, and clobber existing values.  One request can set several keys.  Last value wins.
+//	/set sets a key-value string pair in the Stringabase.  Will both accept empty strings for values, and clobber the existing value of any existing key.  One request can set several keys.  First value wins.
 func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get", handleGet(sb))
@@ -56,7 +56,7 @@ func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 	}
 }
 
-// handleSet retrieves key-value string pairs from the URI and stores their values in sb. Will both initialize empty values, and clobber existing values.  One request can set several keys.  Last value wins.
+// handleSet retrieves key-value string pairs from the URI and stores their values in sb. Will both store empty strings as values, and clobber values for existing keys.  One request can set several keys.  If multiple values are specified on a single key, the first value wins.
 func handleSet(sb *stringabase.Stringabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for key, values := range r.URL.Query() {
