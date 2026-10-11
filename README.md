@@ -11,14 +11,17 @@ Structure loosely taken from "Cloud Native Go", by Matthew A. Titmus, and "For t
 ```bash
 go run ./cmd/stringabase
 ```
+
 2. In another terminal, store a value:
 ```bash
 curl -i 'http://localhost:4000/set?somekey=somevalue'
 ```
 You'll get an HTTP 200 status code and an empty response body.
+
 3. Retrieve your value:
 ```bash
 curl -w 'n' 'http://localhost:4000/get?key=somekey'
 ```
 You'll get another HTTP 200 and your value back.
+
 4. Stop the server by hitting `ctrl-c` in its terminal.
