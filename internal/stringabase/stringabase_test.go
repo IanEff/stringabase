@@ -33,6 +33,7 @@ func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 	}
 }
 
+// TestSet_IsRaceFree exercises the store with a concurrent reader and writer so the race detector can catched unsynchronized access.  The channel is established so we wait on the writers to finish before exiting the test.
 func TestSet_IsRaceFree(t *testing.T) {
 	t.Parallel()
 	db := stringabase.NewStringabase()
@@ -46,5 +47,6 @@ func TestSet_IsRaceFree(t *testing.T) {
 	for range 100 {
 		db.Get("a")
 	}
+	// Let the writer finish before we return.
 	<-done
 }
