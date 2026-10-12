@@ -74,6 +74,8 @@ func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 // e.g. http://localhost:4000/set?somekey=somevalue
 //
 // Sets the value of "somekey" to "somevalue", regardless of whether "somekey" currently exists in sb.
+//
+// Note that /set accepts GET here because that's the project spec.  Typically, an HTTP GET is nullipotent.
 func handleSet(sb *stringabase.Stringabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for key, values := range r.URL.Query() {

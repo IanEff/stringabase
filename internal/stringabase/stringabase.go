@@ -29,7 +29,7 @@ func (s *Stringabase) Get(key string) (string, bool) {
 	return value, ok
 }
 
-// Set sets the key value pair in the database. If the key is present, its existing value is clobbered.
+// Set sets the key-value pair in the database. If the key is present, its existing value is clobbered.
 func (s *Stringabase) Set(key, value string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
