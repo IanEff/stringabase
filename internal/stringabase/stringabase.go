@@ -10,14 +10,13 @@ import (
 // usable: build with NewStringabase().
 type Stringabase struct {
 	database map[string]string
-	mu       *sync.RWMutex
+	mu       sync.RWMutex
 }
 
 // NewStringabase returns the pointer to a freshly initialized Stringabase.
 func NewStringabase() *Stringabase {
 	return &Stringabase{
 		database: make(map[string]string),
-		mu:       &sync.RWMutex{},
 	}
 }
 
