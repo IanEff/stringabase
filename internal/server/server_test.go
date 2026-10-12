@@ -70,6 +70,37 @@ func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 	}
 }
 
+func TestSet_StoresEveryKeyInAMultiKeyRequest(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+	wantA := "1"
+	wantB := "2"
+
+	fetch(t, ts, "/set?a=1&b=2")
+	_, gotA := fetch(t, ts, "/get?key=a")
+	_, gotB := fetch(t, ts, "/get?key=b")
+
+	if wantA != gotA {
+		t.Error(cmp.Diff(wantA, gotA))
+	}
+	if wantB != gotB {
+		t.Error(cmp.Diff(wantB, gotB))
+	}
+}
+
+func TestSet_KeepsFirstValueWithRepeatedKey(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+	want := "1"
+
+	fetch(t, ts, "/set?a=1&a=2")
+	_, got := fetch(t, ts, "/get?key=a")
+
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestListenAndServe_ReturnsWhenContextIsCanceled(t *testing.T) {
 	t.Parallel()
 	// Hand the HTTP server a canceled context before it starts listening so it returns immediately.
@@ -86,6 +117,28 @@ func TestListenAndServe_ReturnsWhenContextIsCanceled(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("ListenAndServe did not return after ctx was canceled")
+	}
+}
+
+func TestListenAndServe_ReturnsImmediatelyUponDiscoveringItCannotServe(t *testing.T) {
+	t.Parallel()
+	// Open and hold a listener on some tcp addr so ListenAndServe can't bind.
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	errc := make(chan error, 1)
+	go func() {
+		errc <- server.ListenAndServe(t.Context(), l.Addr().String(), stringabase.NewStringabase())
+	}()
+	select {
+	case err := <-errc:
+		if err == nil {
+			t.Error("expected non-nil error when addr is already bound, got nil")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("ListenAndServe did not return when it couldn't bind.")
 	}
 }
 
