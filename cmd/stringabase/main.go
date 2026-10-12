@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,6 +21,6 @@ func main() {
 	defer stop()
 	err := server.ListenAndServe(ctx, addr, sb)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
