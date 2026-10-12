@@ -1,5 +1,5 @@
 // Package server exposes [stringabase.Stringabase] as an HTTP API. The endpoints are documented in
-// [ListenAndServe].
+// [NewMuxer].
 package server
 
 import (
@@ -39,7 +39,7 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabas
 // /get retrieves a value from the Stringabase by key. Returns an HTTP StatusOK and the value if the key is
 // present. Returns a 404 if the key is not found.
 //
-//	/set sets a key-value string pair in the Stringabase.  One request can set several keys.
+// /set sets a key-value string pair in the Stringabase. One request can set several keys.
 func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get", handleGet(sb))
@@ -68,8 +68,8 @@ func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 
 // handleSet returns a handler that retrieves key-value string pairs from the URI and stores their values in
 // sb. Will both store empty strings as values, and clobber values for existing keys. One request can set
-// several keys; each query parameter's is the stored key, and its value is stored as the value If multiple
-// values are specified on a single key, the first value wins.
+// several keys; each query parameter's name is the stored key, and its value is stored as the value. If
+// multiple values are specified on a single key, the first value wins.
 //
 // e.g. http://localhost:4000/set?somekey=somevalue
 //
