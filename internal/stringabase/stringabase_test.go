@@ -33,8 +33,8 @@ func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 	}
 }
 
-// TestSet_IsRaceFree exercises the store with a concurrent reader and writer so the race detector can catched
-// unsynchronized access. The channel is established so we wait on the writers to finish before exiting the
+// TestSet_IsRaceFree exercises the store with a concurrent reader and writer so the race detector can catch
+// unsynchronized access. The channel is established so we wait on the writer to finish before exiting the
 // test.
 func TestSet_IsRaceFree(t *testing.T) {
 	t.Parallel()
