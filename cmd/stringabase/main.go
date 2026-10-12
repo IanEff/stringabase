@@ -1,6 +1,10 @@
-// Stringabase is a barebones, concurrency-safe, string key-value store served over a simple HTTP API on TCP
-// port 4000. It's unfussy about values, it clobbers, all the defaults are baked in, and it's strictly
-// in-memory.
+// Stringabase is a barebones concurrency-safe string key-value store served over HTTP on localhost:4000.
+// It's unfussy about values, it clobbers, all the defaults are baked in, and it's strictly in-memory.
+//
+// It runs as an HTTP server and presents the Stringabase over a simple HTTP API documented in
+// [server.NewMuxer].
+//
+//	go run ./cmd/stringabase
 package main
 
 import (
