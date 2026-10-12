@@ -12,10 +12,10 @@ import (
 	"github.com/ianeff/stringabase/internal/stringabase"
 )
 
-// ListenAndServe serves sb out over HTTP at addr on endpoints /get and /set, described in [NewMuxer], until
-// ctx is canceled. sb is an initialized [stringabase.Stringabase]. addr takes any form net/http accepts
-// ("localhost:3000"). When ctx is canceled, ListenAndServe drops in-flight requests and returns. If it cannot
-// serve, it immediately returns a non-nil error.
+// ListenAndServe serves sb out over HTTP at addr on endpoints described in [NewMuxer], until ctx is canceled.
+// sb is an initialized [stringabase.Stringabase]. addr takes any form net/http accepts ("localhost:4000").
+// When ctx is canceled, ListenAndServe drops in-flight requests and returns nil. If it cannot serve, it
+// immediately returns a non-nil error.
 func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabase) error {
 	srv := &http.Server{
 		Addr:         addr,
@@ -34,12 +34,19 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabas
 }
 
 // NewMuxer returns a handler for the HTTP API, backed by sb.
-// It collects and exposes the following endpoints:
+// It exposes the following endpoints:
 //
-// /get retrieves a value from the Stringabase by key. Returns an HTTP StatusOK and the value if the key is
-// present. Returns a 404 if the key is not found.
+// /get retrieves a value from the Stringabase by key. Returns a StatusOK and the value if the key is
+// present, even if that value is an empty string.
+// Returns a StatusNotFound if the key is not found.
 //
-// /set sets a key-value string pair in the Stringabase. One request can set several keys.
+//	/get?key=somekey
+//
+// /set stores a key-value string pair in the Stringabase. It is idempotent and will replace any existing
+// value for a key.  One request can set several keys. If a key repeats, the first value wins.
+// Returns a StatusOK with an empty body.
+//
+//	/set?somekey=somevalue&otherkey=someothervalue
 func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get", handleGet(sb))
@@ -50,10 +57,10 @@ func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 // handleGet returns a handler that retrieves the query parameter named "key" from the URI and attempts to
 // retrieve its value from sb.
 //
-// e.g. http://localhost:4000/get?key=somekey
+//	/get?key=somekey
 //
 // Returns an HTTP StatusOK and the value if the key "somekey" is present, even if that value is an empty
-// string, and a 404 if the key is not found.
+// string, and a StatusNotFound if the key is not found.
 func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		key := r.URL.Query().Get("key")
@@ -71,11 +78,12 @@ func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 // several keys; each query parameter's name is the stored key, and its value is stored as the value. If
 // multiple values are specified on a single key, the first value wins.
 //
-// e.g. http://localhost:4000/set?somekey=somevalue
+//	/set?somekey=somevalue
 //
 // Sets the value of "somekey" to "somevalue", regardless of whether "somekey" currently exists in sb.
 //
-// Note that /set accepts GET here because that's the project spec.  Typically, an HTTP GET is nullipotent.
+// Note that /set accepts GET here because the spec only specifies a URL. An HTTP GET is supposed to be safe
+// in addition to being idempotent, but this is where we find ourselves.
 func handleSet(sb *stringabase.Stringabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		for key, values := range r.URL.Query() {
