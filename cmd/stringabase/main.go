@@ -5,6 +5,9 @@ package main
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/ianeff/stringabase/internal/server"
 	"github.com/ianeff/stringabase/internal/stringabase"
@@ -13,7 +16,8 @@ import (
 func main() {
 	addr := "localhost:4000"
 	sb := stringabase.NewStringabase()
-	ctx := context.TODO()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	err := server.ListenAndServe(ctx, addr, sb)
 	if err != nil {
 		panic(err)
