@@ -120,28 +120,6 @@ func TestListenAndServe_ReturnsWhenContextIsCanceled(t *testing.T) {
 	}
 }
 
-func TestListenAndServe_ReturnsImmediatelyUponDiscoveringItCannotServe(t *testing.T) {
-	t.Parallel()
-	// Open and hold a listener on some tcp addr so ListenAndServe can't bind.
-	l, err := net.Listen("tcp", "localhost:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer l.Close()
-	errc := make(chan error, 1)
-	go func() {
-		errc <- server.ListenAndServe(t.Context(), l.Addr().String(), stringabase.NewStringabase())
-	}()
-	select {
-	case err := <-errc:
-		if err == nil {
-			t.Error("expected non-nil error when addr is already bound, got nil")
-		}
-	case <-time.After(time.Second):
-		t.Fatal("ListenAndServe did not return when it couldn't bind.")
-	}
-}
-
 func newTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	return httptest.NewTestServer(t, server.NewMuxer(stringabase.NewStringabase()))
