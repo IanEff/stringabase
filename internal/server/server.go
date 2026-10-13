@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/ianeff/stringabase/internal/stringabase"
@@ -47,6 +48,8 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabas
 // Returns a StatusOK with an empty body.
 //
 //	/set?somekey=somevalue&otherkey=someothervalue
+//
+// Keys and values must be URL-encoded.
 func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get", handleGet(sb))
@@ -63,7 +66,12 @@ func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 // string, and a StatusNotFound if the key is not found.
 func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		key := r.URL.Query().Get("key")
+		query, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		key := query.Get("key")
 		value, ok := sb.Get(key)
 		if !ok {
 			http.Error(w, fmt.Sprintf("%q not found", key), http.StatusNotFound)
@@ -86,7 +94,12 @@ func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 // in addition to being idempotent, but this is where we find ourselves.
 func handleSet(sb *stringabase.Stringabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		for key, values := range r.URL.Query() {
+		query, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		for key, values := range query {
 			sb.Set(key, values[0])
 		}
 	}

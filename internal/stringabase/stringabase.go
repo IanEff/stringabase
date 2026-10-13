@@ -9,8 +9,8 @@ import (
 // Set(). Set() will clobber existing stored values and allows for empty string values. The zero value is not
 // usable: build with NewStringabase().
 type Stringabase struct {
-	database map[string]string
 	mu       sync.RWMutex
+	database map[string]string
 }
 
 // NewStringabase returns the pointer to a freshly initialized Stringabase.
