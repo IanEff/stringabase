@@ -49,7 +49,8 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabas
 //
 //	/set?somekey=somevalue&otherkey=someothervalue
 //
-// Keys and values must be URL-encoded.
+// Keys and values must be URL-encoded. Stores nothing and returns StatusBadRequest if the query can't be
+// decoded.
 func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get", handleGet(sb))
