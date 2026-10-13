@@ -19,11 +19,12 @@ import (
 // immediately returns a non-nil error.
 func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabase) error {
 	srv := &http.Server{
-		Addr:         addr,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  120 * time.Second,
-		Handler:      NewMuxer(sb),
+		Addr:           addr,
+		ReadTimeout:    2 * time.Second,
+		WriteTimeout:   5 * time.Second,
+		IdleTimeout:    60 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+		Handler:        NewMuxer(sb),
 	}
 	stop := context.AfterFunc(ctx, func() { srv.Close() })
 	defer stop()
