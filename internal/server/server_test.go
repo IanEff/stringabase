@@ -101,15 +101,18 @@ func TestSet_KeepsFirstValueWithRepeatedKey(t *testing.T) {
 	}
 }
 
-func TestListenAndServe_ReturnsWhenContextIsCanceled(t *testing.T) {
+func TestListenAndServe_ReturnsNilWhenCanceledWhileServing(t *testing.T) {
 	t.Parallel()
-	// Hand the HTTP server a canceled context before it starts listening so it returns immediately.
 	ctx, cancel := context.WithCancel(t.Context())
-	cancel()
+	addr := randomLocalAddr(t)
 	errc := make(chan error, 1)
 	go func() {
-		errc <- server.ListenAndServe(ctx, randomLocalAddr(t), stringabase.NewStringabase())
+		errc <- server.ListenAndServe(ctx, addr, stringabase.NewStringabase())
 	}()
+	waitUntilServing(t, addr)
+
+	cancel()
+
 	select {
 	case err := <-errc:
 		if err != nil {
@@ -147,4 +150,35 @@ func randomLocalAddr(t *testing.T) string {
 	}
 	defer l.Close()
 	return l.Addr().String()
+}
+
+func waitUntilServing(t *testing.T, addr string) {
+	t.Helper()
+	deadline := time.Now().Add(time.Second)
+	for {
+		resp, err := http.Get("http://" + addr + "/get?key=a")
+		if err == nil {
+			resp.Body.Close()
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("server at %s never started: %v", addr, err)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func TestSet_RejectsAndDoesNotStoreOnBadQuery(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+
+	status, _ := fetch(t, ts, "/set?a=1&b=100%")
+	gotStatus, _ := fetch(t, ts, "/get?key=a")
+
+	if status != http.StatusBadRequest {
+		t.Errorf("want status %d, got %d", http.StatusBadRequest, status)
+	}
+	if gotStatus != http.StatusNotFound {
+		t.Errorf("want a NotFound (status %d), got %d", http.StatusNotFound, gotStatus)
+	}
 }
