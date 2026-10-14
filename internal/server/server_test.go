@@ -130,7 +130,8 @@ func newTestServer(t *testing.T) *httptest.Server {
 
 func fetch(t *testing.T, ts *httptest.Server, path string) (int, string) {
 	t.Helper()
-	resp, err := ts.Client().Get(ts.URL + path)
+	client := ts.Client()
+	resp, err := client.Get(ts.URL + path)
 	if err != nil {
 		t.Fatal(err)
 	}
