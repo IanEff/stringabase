@@ -30,20 +30,6 @@ func TestGet_ReturnsAValueStoredByASet(t *testing.T) {
 	}
 }
 
-func TestSet_ClobbersValueFromEarlierKey(t *testing.T) {
-	t.Parallel()
-	ts := newTestServer(t)
-	want := "2"
-
-	fetch(t, ts, "/set?a=1")
-	fetch(t, ts, "/set?a=2")
-	_, got := fetch(t, ts, "/get?key=a")
-
-	if want != got {
-		t.Error(cmp.Diff(want, got))
-	}
-}
-
 func TestGet_RespondsWithNotFoundForBogusKey(t *testing.T) {
 	t.Parallel()
 	ts := newTestServer(t)
@@ -97,6 +83,20 @@ func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 	}
 }
 
+func TestSet_ClobbersValueFromEarlierKey(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+	want := "2"
+
+	fetch(t, ts, "/set?a=1")
+	fetch(t, ts, "/set?a=2")
+	_, got := fetch(t, ts, "/get?key=a")
+
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestSet_StoresEveryKeyInAMultiKeyRequest(t *testing.T) {
 	t.Parallel()
 	ts := newTestServer(t)
@@ -125,6 +125,21 @@ func TestSet_KeepsFirstValueWithRepeatedKey(t *testing.T) {
 
 	if want != got {
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestSet_RejectsAndDoesNotStoreOnBadQuery(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+
+	status, _ := fetch(t, ts, "/set?a=1&b=100%")
+	gotStatus, _ := fetch(t, ts, "/get?key=a")
+
+	if status != http.StatusBadRequest {
+		t.Errorf("want status %d, got %d", http.StatusBadRequest, status)
+	}
+	if gotStatus != http.StatusNotFound {
+		t.Errorf("want a NotFound (status %d), got %d", http.StatusNotFound, gotStatus)
 	}
 }
 
@@ -193,20 +208,5 @@ func waitUntilServing(t *testing.T, addr string) {
 			t.Fatalf("server at %s never started: %v", addr, err)
 		}
 		time.Sleep(10 * time.Millisecond)
-	}
-}
-
-func TestSet_RejectsAndDoesNotStoreOnBadQuery(t *testing.T) {
-	t.Parallel()
-	ts := newTestServer(t)
-
-	status, _ := fetch(t, ts, "/set?a=1&b=100%")
-	gotStatus, _ := fetch(t, ts, "/get?key=a")
-
-	if status != http.StatusBadRequest {
-		t.Errorf("want status %d, got %d", http.StatusBadRequest, status)
-	}
-	if gotStatus != http.StatusNotFound {
-		t.Errorf("want a NotFound (status %d), got %d", http.StatusNotFound, gotStatus)
 	}
 }
