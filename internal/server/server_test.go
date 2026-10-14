@@ -30,6 +30,21 @@ func TestGet_ReturnsAValueStoredByASet(t *testing.T) {
 	}
 }
 
+func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+
+	fetch(t, ts, "/set?a=")
+	status, got := fetch(t, ts, "/get?key=a")
+
+	if status != http.StatusOK {
+		t.Fatalf("want status %d, got %d", http.StatusOK, status)
+	}
+	if got != "" {
+		t.Error(cmp.Diff("", got))
+	}
+}
+
 func TestGet_RespondsWithNotFoundForBogusKey(t *testing.T) {
 	t.Parallel()
 	ts := newTestServer(t)
@@ -49,37 +64,6 @@ func TestGet_RespondsWithBadRequestWhenKeyParameterIsMissing(t *testing.T) {
 
 	if status != http.StatusBadRequest {
 		t.Errorf("want status %d, got %d", http.StatusBadRequest, status)
-	}
-}
-
-func TestGet_ReturnsAValueStoredWithURLEncodedKeyAndValue(t *testing.T) {
-	t.Parallel()
-	ts := newTestServer(t)
-	want := "a+b&c"
-
-	fetch(t, ts, "/set?encoded%20mess=a%2Bb%26c")
-	status, got := fetch(t, ts, "/get?key=encoded+mess")
-
-	if status != http.StatusOK {
-		t.Fatalf("want status %d, got %d", http.StatusOK, status)
-	}
-	if want != got {
-		t.Error(cmp.Diff(want, got))
-	}
-}
-
-func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
-	t.Parallel()
-	ts := newTestServer(t)
-
-	fetch(t, ts, "/set?a=")
-	status, got := fetch(t, ts, "/get?key=a")
-
-	if status != http.StatusOK {
-		t.Fatalf("want status %d, got %d", http.StatusOK, status)
-	}
-	if got != "" {
-		t.Error(cmp.Diff("", got))
 	}
 }
 
@@ -123,6 +107,22 @@ func TestSet_KeepsFirstValueWithRepeatedKey(t *testing.T) {
 	fetch(t, ts, "/set?a=1&a=2")
 	_, got := fetch(t, ts, "/get?key=a")
 
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestGet_ReturnsAValueStoredWithURLEncodedKeyAndValue(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+	want := "a+b&c"
+
+	fetch(t, ts, "/set?encoded%20mess=a%2Bb%26c")
+	status, got := fetch(t, ts, "/get?key=encoded+mess")
+
+	if status != http.StatusOK {
+		t.Fatalf("want status %d, got %d", http.StatusOK, status)
+	}
 	if want != got {
 		t.Error(cmp.Diff(want, got))
 	}
