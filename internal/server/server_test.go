@@ -55,6 +55,33 @@ func TestGet_RespondsWithNotFoundForBogusKey(t *testing.T) {
 	}
 }
 
+func TestGet_RespondsWithBadRequestWhenKeyParameterIsMissing(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+
+	status, _ := fetch(t, ts, "/get")
+
+	if status != http.StatusBadRequest {
+		t.Errorf("want status %d, got %d", http.StatusBadRequest, status)
+	}
+}
+
+func TestGet_ReturnsAValueStoredWithURLEncodedKeyAndValue(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+	want := "a+b&c"
+
+	fetch(t, ts, "/set?encoded%20mess=a%2Bb%26c")
+	status, got := fetch(t, ts, "/get?key=encoded+mess")
+
+	if status != http.StatusOK {
+		t.Fatalf("want status %d, got %d", http.StatusOK, status)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 	t.Parallel()
 	ts := newTestServer(t)
