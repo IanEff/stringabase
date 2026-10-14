@@ -40,7 +40,7 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabas
 //
 // /get retrieves a value from the Stringabase by key. Returns a StatusOK and the value if the key is
 // present, even if that value is an empty string.
-// Returns a StatusNotFound if the key is not found.
+// Returns a StatusNotFound if the key is not found.  Returns a StatusBadRequest if the request lacks a key.
 //
 //	/get?key=somekey
 //
@@ -65,12 +65,17 @@ func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 //	/get?key=somekey
 //
 // Returns an HTTP StatusOK and the value if the key "somekey" is present, even if that value is an empty
-// string, and a StatusNotFound if the key is not found.
+// string, and a StatusNotFound if the key is not found. Returns a StatusBadRequest if the request lacks a
+// key.
 func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if !query.Has("key") {
+			http.Error(w, "no key present in request", http.StatusBadRequest)
 			return
 		}
 		key := query.Get("key")
