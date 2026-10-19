@@ -3,53 +3,63 @@ package stringabase_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/ianeff/stringabase/internal/stringabase"
 )
 
 func TestSet_SetsTheValueOfSomeKeyInTheMapAndGetGetsIt(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStore()
+	db := newTestStore(t)
+	want := "1"
+
 	db.Set("a", "1")
 	got, ok := db.Get("a")
 	if !ok {
 		t.Fatal("key not found")
 	}
-	if got != "1" {
-		t.Fatalf("wanted %q, got %q", "1", got)
+	if got != want {
+		t.Errorf("wrong value after Set (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
 func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStore()
+	db := newTestStore(t)
+	want := "2"
+
 	db.Set("a", "1")
 	db.Set("a", "2")
 	got, ok := db.Get("a")
 	if !ok {
 		t.Fatal("key not found")
 	}
-	if got != "2" {
-		t.Fatalf("wanted %q, got %q", "2", got)
+
+	if got != want {
+		t.Errorf("second Set didn't clobber the first (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
 func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStore()
+	db := newTestStore(t)
+	wantA := ""
+	wantB := ""
+
 	db.Set("a", "")
 	got, ok := db.Get("a")
 	if !ok {
 		t.Fatal("key not found")
 	}
-	if got != "" {
-		t.Fatalf("wanted %q, got %q", "", got)
+	if got != wantA {
+		t.Errorf("wrong value for a key set to empty (-want +got):\n%s", cmp.Diff(wantA, got))
 	}
+
 	got, ok = db.Get("b")
 	if ok {
 		t.Fatal("missing key found")
 	}
-	if got != "" {
-		t.Fatalf("wanted %q, got %q", "", got)
+	if got != wantB {
+		t.Errorf("missing key returned a value (-want +got):\n%s", cmp.Diff(wantB, got))
 	}
 }
 
@@ -58,7 +68,7 @@ func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 // test.
 func TestSet_IsRaceFree(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStore()
+	db := newTestStore(t)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -71,4 +81,9 @@ func TestSet_IsRaceFree(t *testing.T) {
 	}
 	// Let the writer finish before we return.
 	<-done
+}
+
+func newTestStore(t *testing.T) *stringabase.Store {
+	t.Helper()
+	return stringabase.NewStore()
 }
