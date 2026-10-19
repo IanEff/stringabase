@@ -113,7 +113,7 @@ func TestSet_KeepsFirstValueWithRepeatedKey(t *testing.T) {
 	}
 }
 
-func TestSet_StoresAndReturnsAStatusOKWithAnEmptyBody(t *testing.T) {
+func TestSet_ReturnsAStatusOKWithAnEmptyBody(t *testing.T) {
 	t.Parallel()
 	ts := newTestServer(t)
 	want := ""

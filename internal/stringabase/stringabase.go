@@ -13,15 +13,14 @@ type Store struct {
 	database map[string]string
 }
 
-// NewStore returns the pointer to a freshly initialized Stringabase.
+// NewStore returns the pointer to a freshly initialized Store.
 func NewStore() *Store {
 	return &Store{
 		database: make(map[string]string),
 	}
 }
 
-// Get returns a key's value from the Stringabase. If the key isn't present, it returns an empty string and
-// false.
+// Get returns a key's value from the Store. If the key isn't present, it returns an empty string and false.
 func (s *Store) Get(key string) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
