@@ -38,20 +38,24 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabas
 // NewMuxer returns a handler for the HTTP API, backed by sb.
 // It exposes the following endpoints:
 //
-// /get retrieves a value from the Stringabase by key. Returns a StatusOK and the value if the key is
-// present, even if that value is an empty string.
-// Returns a StatusNotFound if the key is not found.  Returns a StatusBadRequest if the request lacks a key.
+// /get retrieves a value from sb by key. Returns a StatusOK and the value if the key is present, even if that
+// value is an empty string.
+// Returns a StatusNotFound if the key is not found.
+// Returns a StatusBadRequest if the request lacks a key.
 //
 //	/get?key=somekey
 //
-// /set stores a key-value string pair in the Stringabase. It is idempotent and will replace any existing
-// value for a key.  One request can set several keys. If a key repeats, the first value wins.
+// /set stores a key-value string pair in sb. It is idempotent and will replace any existing value for a key.
+// One request can set several keys. If a key repeats, the first value wins.
 // Returns a StatusOK with an empty body.
 //
 //	/set?somekey=somevalue&otherkey=someothervalue
 //
 // Keys and values must be URL-encoded. Stores nothing and returns StatusBadRequest if the query can't be
 // decoded.
+//
+// Note that /set accepts GET here because the spec only specifies a URL. An HTTP GET is supposed to be safe
+// in addition to being idempotent, but this is where we find ourselves.
 func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get", handleGet(sb))
@@ -61,12 +65,6 @@ func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 
 // handleGet returns a handler that retrieves the query parameter named "key" from the URI and attempts to
 // retrieve its value from sb.
-//
-//	/get?key=somekey
-//
-// Returns an HTTP StatusOK and the value if the key "somekey" is present, even if that value is an empty
-// string, and a StatusNotFound if the key is not found. Returns a StatusBadRequest if the request lacks a
-// key.
 func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query, err := url.ParseQuery(r.URL.RawQuery)
@@ -89,16 +87,7 @@ func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 }
 
 // handleSet returns a handler that retrieves key-value string pairs from the URI and stores their values in
-// sb. Will both store empty strings as values, and clobber values for existing keys. One request can set
-// several keys; each query parameter's name is the stored key, and its value is stored as the value. If
-// multiple values are specified on a single key, the first value wins.
-//
-//	/set?somekey=somevalue
-//
-// Sets the value of "somekey" to "somevalue", regardless of whether "somekey" currently exists in sb.
-//
-// Note that /set accepts GET here because the spec only specifies a URL. An HTTP GET is supposed to be safe
-// in addition to being idempotent, but this is where we find ourselves.
+// sb.
 func handleSet(sb *stringabase.Stringabase) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query, err := url.ParseQuery(r.URL.RawQuery)
