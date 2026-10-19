@@ -1,4 +1,4 @@
-// Package server exposes [stringabase.Stringabase] as an HTTP API. The endpoints are documented in
+// Package server exposes [stringabase.Store] as an HTTP API. The endpoints are documented in
 // [NewMuxer].
 package server
 
@@ -14,10 +14,10 @@ import (
 )
 
 // ListenAndServe serves sb out over HTTP at addr on endpoints described in [NewMuxer], until ctx is canceled.
-// sb is an initialized [stringabase.Stringabase]. addr takes any form net/http accepts ("localhost:4000").
+// sb is an initialized [stringabase.Store]. addr takes any form net/http accepts ("localhost:4000").
 // When ctx is canceled, ListenAndServe drops in-flight requests and returns nil. If it cannot serve, it
 // immediately returns a non-nil error.
-func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabase) error {
+func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Store) error {
 	srv := &http.Server{
 		Addr:           addr,
 		ReadTimeout:    2 * time.Second,
@@ -56,7 +56,7 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Stringabas
 //
 // Note that /set accepts GET here because the spec only specifies a URL. An HTTP GET is supposed to be safe
 // in addition to being idempotent, but this is where we find ourselves.
-func NewMuxer(sb *stringabase.Stringabase) http.Handler {
+func NewMuxer(sb *stringabase.Store) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get", handleGet(sb))
 	mux.HandleFunc("/set", handleSet(sb))
@@ -65,7 +65,7 @@ func NewMuxer(sb *stringabase.Stringabase) http.Handler {
 
 // handleGet returns a handler that retrieves the query parameter named "key" from the URI and attempts to
 // retrieve its value from sb.
-func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
+func handleGet(sb *stringabase.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {
@@ -88,7 +88,7 @@ func handleGet(sb *stringabase.Stringabase) http.HandlerFunc {
 
 // handleSet returns a handler that retrieves key-value string pairs from the URI and stores their values in
 // sb.
-func handleSet(sb *stringabase.Stringabase) http.HandlerFunc {
+func handleSet(sb *stringabase.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {

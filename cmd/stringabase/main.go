@@ -20,7 +20,7 @@ import (
 
 func main() {
 	addr := "localhost:4000"
-	sb := stringabase.NewStringabase()
+	sb := stringabase.NewStore()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	err := server.ListenAndServe(ctx, addr, sb)

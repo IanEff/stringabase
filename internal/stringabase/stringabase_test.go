@@ -8,7 +8,7 @@ import (
 
 func TestSet_SetsTheValueOfSomeKeyInTheMapAndGetGetsIt(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStringabase()
+	db := stringabase.NewStore()
 	db.Set("a", "1")
 	got, ok := db.Get("a")
 	if !ok {
@@ -21,7 +21,7 @@ func TestSet_SetsTheValueOfSomeKeyInTheMapAndGetGetsIt(t *testing.T) {
 
 func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStringabase()
+	db := stringabase.NewStore()
 	db.Set("a", "1")
 	db.Set("a", "2")
 	got, ok := db.Get("a")
@@ -38,7 +38,7 @@ func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 // test.
 func TestSet_IsRaceFree(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStringabase()
+	db := stringabase.NewStore()
 	done := make(chan struct{})
 	go func() {
 		defer close(done)

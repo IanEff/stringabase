@@ -67,6 +67,17 @@ func TestGet_RespondsWithBadRequestWhenKeyParameterIsMissing(t *testing.T) {
 	}
 }
 
+func TestGet_RespondsWithBadRequestIfItCantDecodeAQuery(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+
+	status, _ := fetch(t, ts, "/get?key=100%")
+
+	if status != http.StatusBadRequest {
+		t.Errorf("want status %d, got %d", http.StatusBadRequest, status)
+	}
+}
+
 func TestSet_ClobbersValueFromEarlierKey(t *testing.T) {
 	t.Parallel()
 	ts := newTestServer(t)
@@ -78,6 +89,33 @@ func TestSet_ClobbersValueFromEarlierKey(t *testing.T) {
 
 	if want != got {
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestSet_StoresAndReturnsAStatusOKWithAnEmptyBody(t *testing.T) {
+	t.Parallel()
+
+	ts := newTestServer(t)
+	client := ts.Client()
+	URIPath := "/set?a=1"
+
+	resp, err := client.Get(ts.URL + URIPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Error(cmp.Diff(resp.StatusCode, http.StatusOK))
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := "ok"
+	if want != string(body) {
+		t.Error(cmp.Diff(want, string(body)))
 	}
 }
 
@@ -149,7 +187,7 @@ func TestListenAndServe_ReturnsNilWhenCanceledWhileServing(t *testing.T) {
 	addr := randomLocalAddr(t)
 	errc := make(chan error, 1)
 	go func() {
-		errc <- server.ListenAndServe(ctx, addr, stringabase.NewStringabase())
+		errc <- server.ListenAndServe(ctx, addr, stringabase.NewStore())
 	}()
 	waitUntilServing(t, addr)
 
@@ -167,7 +205,7 @@ func TestListenAndServe_ReturnsNilWhenCanceledWhileServing(t *testing.T) {
 
 func newTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
-	return httptest.NewTestServer(t, server.NewMuxer(stringabase.NewStringabase()))
+	return httptest.NewTestServer(t, server.NewMuxer(stringabase.NewStore()))
 }
 
 func fetch(t *testing.T, ts *httptest.Server, path string) (int, string) {
