@@ -26,7 +26,7 @@ func TestGet_ReturnsAValueStoredByASet(t *testing.T) {
 		t.Fatalf("want status %d, got %d", http.StatusOK, status)
 	}
 	if want != got {
-		t.Error(cmp.Diff(want, got))
+		t.Errorf("wrong value from /get after /set (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
@@ -42,7 +42,7 @@ func TestGet_ReturnsStatusOKForAnEmptyValue(t *testing.T) {
 		t.Fatalf("want status %d, got %d", http.StatusOK, status)
 	}
 	if want != got {
-		t.Error(cmp.Diff(want, got))
+		t.Errorf("wrong value for a key set to empty (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
@@ -78,7 +78,7 @@ func TestSet_ClobbersValueFromEarlierKey(t *testing.T) {
 	_, got := fetch(t, ts, "/get?key=a")
 
 	if want != got {
-		t.Error(cmp.Diff(want, got))
+		t.Errorf("second /set didn't clobber the first (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
@@ -93,10 +93,10 @@ func TestSet_StoresEveryKeyInAMultiKeyRequest(t *testing.T) {
 	_, gotB := fetch(t, ts, "/get?key=b")
 
 	if wantA != gotA {
-		t.Error(cmp.Diff(wantA, gotA))
+		t.Errorf("wrong value for key a (-want +got):\n%s", cmp.Diff(wantA, gotA))
 	}
 	if wantB != gotB {
-		t.Error(cmp.Diff(wantB, gotB))
+		t.Errorf("wrong value for key b (-want +got):\n%s", cmp.Diff(wantB, gotB))
 	}
 }
 
@@ -109,7 +109,7 @@ func TestSet_KeepsFirstValueWithRepeatedKey(t *testing.T) {
 	_, got := fetch(t, ts, "/get?key=a")
 
 	if want != got {
-		t.Error(cmp.Diff(want, got))
+		t.Errorf("repeated key didn't keep its first value (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
@@ -124,7 +124,7 @@ func TestSet_StoresAndReturnsAStatusOKWithAnEmptyBody(t *testing.T) {
 		t.Fatalf("want status %d, got %d", http.StatusOK, status)
 	}
 	if want != got {
-		t.Error(cmp.Diff(want, got))
+		t.Errorf("/set returned a body (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
@@ -140,7 +140,7 @@ func TestGet_ReturnsAValueStoredWithURLEncodedKeyAndValue(t *testing.T) {
 		t.Fatalf("want status %d, got %d", http.StatusOK, status)
 	}
 	if want != got {
-		t.Error(cmp.Diff(want, got))
+		t.Errorf("wrong value for URL-encoded key and value (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
