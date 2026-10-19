@@ -7,7 +7,7 @@ import (
 
 // Store is a concurrency-safe in-memory string key-value store. It is accessed through Get(), and
 // Set(). Set() will clobber existing stored values and allows for empty string values. The zero value is not
-// usable: build with NewStringabase().
+// usable: build with [NewStore].
 type Store struct {
 	mu       sync.RWMutex
 	database map[string]string
