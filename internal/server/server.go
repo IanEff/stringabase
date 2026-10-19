@@ -28,6 +28,7 @@ func ListenAndServe(ctx context.Context, addr string, sb *stringabase.Store) err
 	}
 	stop := context.AfterFunc(ctx, func() { srv.Close() })
 	defer stop()
+
 	err := srv.ListenAndServe()
 	if errors.Is(err, http.ErrServerClosed) && ctx.Err() != nil {
 		return nil
@@ -77,11 +78,14 @@ func handleGet(sb *stringabase.Store) http.HandlerFunc {
 			return
 		}
 		key := query.Get("key")
+
 		value, ok := sb.Get(key)
 		if !ok {
 			http.Error(w, fmt.Sprintf("%q not found", key), http.StatusNotFound)
 			return
 		}
+
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		fmt.Fprint(w, value)
 	}
 }
@@ -95,6 +99,7 @@ func handleSet(sb *stringabase.Store) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+
 		for key, values := range query {
 			sb.Set(key, values[0])
 		}

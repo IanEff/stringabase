@@ -23,6 +23,7 @@ func main() {
 	sb := stringabase.NewStore()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
 	err := server.ListenAndServe(ctx, addr, sb)
 	if err != nil {
 		log.Fatal(err)

@@ -24,6 +24,7 @@ func NewStore() *Store {
 func (s *Store) Get(key string) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
 	value, ok := s.database[key]
 	return value, ok
 }
@@ -32,5 +33,6 @@ func (s *Store) Get(key string) (string, bool) {
 func (s *Store) Set(key, value string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	s.database[key] = value // clobber existing
 }
