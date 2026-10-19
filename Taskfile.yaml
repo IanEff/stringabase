@@ -2,15 +2,41 @@ version: "3"
 
 tasks:
   default:
-    desc: Vet, then test with the race detector
+    desc: Format, check, then build bin/stringabase
     cmds:
+      - task: fmt
+      - task: ci
+      - task: build
+
+  run:
+    desc: Format, check, build, then serve stringabase on localhost:4000
+    cmds:
+      - task: default
+      - ./bin/stringabase
+
+  fmt:
+    desc: Rewrite Go files with gofmt
+    cmds:
+      - gofmt -w .
+
+  ci:
+    desc: Check formatting, go.mod tidiness and vet, then test with the race detector
+    cmds:
+      - |
+        files=$(gofmt -l .)
+        if [ -n "$files" ]; then
+          echo "gofmt needed:"
+          echo "$files"
+          exit 1
+        fi
+      - go mod tidy -diff
       - go vet ./...
       - go test -race -shuffle=on ./...
 
-  run:
-    desc: Serve stringabase on localhost:4000
+  build:
+    desc: Build bin/stringabase
     cmds:
-      - go run ./cmd/stringabase
+      - go build -o bin/stringabase ./cmd/stringabase
 
   set:
     desc: "Set on the running server: task set -- somekey=somevalue [k2=v2 ...]"
