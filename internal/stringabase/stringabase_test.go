@@ -35,22 +35,22 @@ func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 	}
 
 	if got != want {
-		t.Errorf("second Set dind't clobber the first (-want +got):\n%s", cmp.Diff(want, got))
+		t.Errorf("second Set didn't clobber the first (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
 func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 	t.Parallel()
 	db := stringabase.NewStore()
-	wantA := "a"
-	wantB := "b"
+	wantA := ""
+	wantB := ""
 
 	db.Set("a", "")
 	got, ok := db.Get("a")
 	if !ok {
 		t.Fatal("key not found")
 	}
-	if got != "" {
+	if got != wantA {
 		t.Errorf("wrong value for a key set to empty (-want +got):\n%s", cmp.Diff(wantA, got))
 	}
 
@@ -58,8 +58,8 @@ func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 	if ok {
 		t.Fatal("missing key found")
 	}
-	if got != "" {
-		t.Errorf("wrong value for a key set to empty (-want +got):\n%s", cmp.Diff(wantB, got))
+	if got != wantB {
+		t.Errorf("missing key returned a value (-want +got):\n%s", cmp.Diff(wantB, got))
 	}
 }
 
