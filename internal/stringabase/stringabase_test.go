@@ -9,7 +9,7 @@ import (
 
 func TestSet_SetsTheValueOfSomeKeyInTheMapAndGetGetsIt(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStore()
+	db := newTestStore(t)
 	want := "1"
 
 	db.Set("a", "1")
@@ -24,7 +24,7 @@ func TestSet_SetsTheValueOfSomeKeyInTheMapAndGetGetsIt(t *testing.T) {
 
 func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStore()
+	db := newTestStore(t)
 	want := "2"
 
 	db.Set("a", "1")
@@ -41,7 +41,7 @@ func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 
 func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStore()
+	db := newTestStore(t)
 	wantA := ""
 	wantB := ""
 
@@ -68,7 +68,7 @@ func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 // test.
 func TestSet_IsRaceFree(t *testing.T) {
 	t.Parallel()
-	db := stringabase.NewStore()
+	db := newTestStore(t)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -81,4 +81,9 @@ func TestSet_IsRaceFree(t *testing.T) {
 	}
 	// Let the writer finish before we return.
 	<-done
+}
+
+func newTestStore(t *testing.T) *stringabase.Store {
+	t.Helper()
+	return stringabase.NewStore()
 }
