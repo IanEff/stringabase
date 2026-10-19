@@ -33,6 +33,26 @@ func TestSet_LastOneWinsAndClobbers(t *testing.T) {
 	}
 }
 
+func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
+	t.Parallel()
+	db := stringabase.NewStore()
+	db.Set("a", "")
+	got, ok := db.Get("a")
+	if !ok {
+		t.Fatal("key not found")
+	}
+	if got != "" {
+		t.Fatalf("wanted %q, got %q", "", got)
+	}
+	got, ok = db.Get("b")
+	if ok {
+		t.Fatal("missing key found")
+	}
+	if got != "" {
+		t.Fatalf("wanted %q, got %q", "", got)
+	}
+}
+
 // TestSet_IsRaceFree exercises the store with a concurrent reader and writer so the race detector can catch
 // unsynchronized access. The channel is established so we wait on the writer to finish before exiting the
 // test.

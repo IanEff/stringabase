@@ -30,9 +30,10 @@ func TestGet_ReturnsAValueStoredByASet(t *testing.T) {
 	}
 }
 
-func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
+func TestGet_ReturnsStatusOKForAnEmptyValue(t *testing.T) {
 	t.Parallel()
 	ts := newTestServer(t)
+	want := ""
 
 	fetch(t, ts, "/set?a=")
 	status, got := fetch(t, ts, "/get?key=a")
@@ -40,8 +41,8 @@ func TestGet_DistinguishesAnEmptyValueFromAMissingKey(t *testing.T) {
 	if status != http.StatusOK {
 		t.Fatalf("want status %d, got %d", http.StatusOK, status)
 	}
-	if got != "" {
-		t.Error(cmp.Diff("", got))
+	if want != got {
+		t.Error(cmp.Diff(want, got))
 	}
 }
 
@@ -67,17 +68,6 @@ func TestGet_RespondsWithBadRequestWhenKeyParameterIsMissing(t *testing.T) {
 	}
 }
 
-func TestGet_RespondsWithBadRequestIfItCantDecodeAQuery(t *testing.T) {
-	t.Parallel()
-	ts := newTestServer(t)
-
-	status, _ := fetch(t, ts, "/get?key=100%")
-
-	if status != http.StatusBadRequest {
-		t.Errorf("want status %d, got %d", http.StatusBadRequest, status)
-	}
-}
-
 func TestSet_ClobbersValueFromEarlierKey(t *testing.T) {
 	t.Parallel()
 	ts := newTestServer(t)
@@ -89,33 +79,6 @@ func TestSet_ClobbersValueFromEarlierKey(t *testing.T) {
 
 	if want != got {
 		t.Error(cmp.Diff(want, got))
-	}
-}
-
-func TestSet_StoresAndReturnsAStatusOKWithAnEmptyBody(t *testing.T) {
-	t.Parallel()
-
-	ts := newTestServer(t)
-	client := ts.Client()
-	URIPath := "/set?a=1"
-
-	resp, err := client.Get(ts.URL + URIPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		t.Error(cmp.Diff(resp.StatusCode, http.StatusOK))
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	want := "ok"
-	if want != string(body) {
-		t.Error(cmp.Diff(want, string(body)))
 	}
 }
 
@@ -150,6 +113,21 @@ func TestSet_KeepsFirstValueWithRepeatedKey(t *testing.T) {
 	}
 }
 
+func TestSet_StoresAndReturnsAStatusOKWithAnEmptyBody(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+	want := ""
+
+	status, got := fetch(t, ts, "/set?a=1")
+
+	if status != http.StatusOK {
+		t.Fatalf("want status %d, got %d", http.StatusOK, status)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
 func TestGet_ReturnsAValueStoredWithURLEncodedKeyAndValue(t *testing.T) {
 	t.Parallel()
 	ts := newTestServer(t)
@@ -177,7 +155,18 @@ func TestSet_RejectsAndDoesNotStoreOnBadQuery(t *testing.T) {
 		t.Errorf("want status %d, got %d", http.StatusBadRequest, status)
 	}
 	if gotStatus != http.StatusNotFound {
-		t.Errorf("want a NotFound (status %d), got %d", http.StatusNotFound, gotStatus)
+		t.Errorf("want status %d, got %d", http.StatusNotFound, gotStatus)
+	}
+}
+
+func TestGet_RespondsWithBadRequestIfItCantDecodeAQuery(t *testing.T) {
+	t.Parallel()
+	ts := newTestServer(t)
+
+	status, _ := fetch(t, ts, "/get?key=100%")
+
+	if status != http.StatusBadRequest {
+		t.Errorf("want status %d, got %d", http.StatusBadRequest, status)
 	}
 }
 
